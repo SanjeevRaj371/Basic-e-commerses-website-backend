@@ -23,7 +23,36 @@ connectDB();
 const app = express();
 
 // Middleware
-app.use(cors());
+// CORS configuration - allow requests from frontend
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Allow requests with no origin (mobile apps, curl, etc.)
+    if (!origin) return callback(null, true);
+    
+    // Allow all origins in development, or specific origins in production
+    const allowedOrigins = [
+      process.env.FRONTEND_URL,
+      'http://localhost:5173',
+      'http://localhost:3000',
+    ].filter(Boolean);
+    
+    // In development or if FRONTEND_URL not set, allow all origins
+    if (process.env.NODE_ENV === 'development' || allowedOrigins.length === 0) {
+      return callback(null, true);
+    }
+    
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      // For production, you might want to be more strict
+      callback(null, true); // Allow for now - restrict if needed
+    }
+  },
+  credentials: true,
+  optionsSuccessStatus: 200
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
