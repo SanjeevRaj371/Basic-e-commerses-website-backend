@@ -5,13 +5,20 @@ import User from '../models/User.js';
 export const protect = asyncHandler(async (req, res, next) => {
   let token;
 
-  if (
-    req.headers.authorization &&
-    req.headers.authorization.startsWith('Bearer')
-  ) {
+  // Check for Authorization header (case-insensitive)
+  const authHeader = req.headers.authorization || req.headers.Authorization;
+
+  if (authHeader && authHeader.startsWith('Bearer ')) {
     try {
-      // Get token from header
-      token = req.headers.authorization.split(' ')[1];
+      // Get token from header (remove 'Bearer ' prefix)
+      token = authHeader.substring(7);
+
+      // Check if JWT_SECRET is set
+      if (!process.env.JWT_SECRET) {
+        console.error('JWT_SECRET is not set in environment variables');
+        res.status(500);
+        throw new Error('Server configuration error');
+      }
 
       // Verify token
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -26,12 +33,19 @@ export const protect = asyncHandler(async (req, res, next) => {
 
       next();
     } catch (error) {
-      res.status(401);
-      throw new Error('Not authorized, token failed');
+      // Handle JWT specific errors
+      if (error.name === 'JsonWebTokenError') {
+        res.status(401);
+        throw new Error('Not authorized, invalid token');
+      } else if (error.name === 'TokenExpiredError') {
+        res.status(401);
+        throw new Error('Not authorized, token expired');
+      } else {
+        res.status(401);
+        throw new Error('Not authorized, token failed');
+      }
     }
-  }
-
-  if (!token) {
+  } else {
     res.status(401);
     throw new Error('Not authorized, no token');
   }

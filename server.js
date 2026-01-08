@@ -32,7 +32,7 @@ const corsOptions = {
     // Allow all origins in development, or specific origins in production
     const allowedOrigins = [
       process.env.FRONTEND_URL,
-      'https://basic-e-commerses-website-frontend.vercel.app/'
+      'https://basic-e-commerses-website-frontend.vercel.app', // No trailing slash
       'http://localhost:5173',
       'http://localhost:3000',
     ].filter(Boolean);
@@ -45,8 +45,8 @@ const corsOptions = {
     if (allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
-      // For production, you might want to be more strict
-      callback(null, true); // Allow for now - restrict if needed
+      // Allow all origins for now - can restrict later if needed
+      callback(null, true);
     }
   },
   credentials: true,
